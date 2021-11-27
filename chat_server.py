@@ -105,13 +105,13 @@ while True:
 
             # If False, client disconnected, cleanup
             if message is False:
-                print('Closed connection from: {}'.format(clients[notified_socket]['data'].decode('utf-8')))
+                # print('Closed connection from: {}'.format(clients[notified_socket]['data'].decode('utf-8')))
 
-                # Remove from list for socket.socket()
-                sockets_list.remove(notified_socket)
+                # # Remove from list for socket.socket()
+                # sockets_list.remove(notified_socket)
 
-                # Remove from our list of users
-                del clients[notified_socket]
+                # # Remove from our list of users
+                # del clients[notified_socket]
 
                 continue
 

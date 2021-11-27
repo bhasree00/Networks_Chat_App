@@ -40,7 +40,7 @@ def main():
     clock = pg.time.Clock()
     color = pg.Color(WHITE)
 
-    screenMode = 1 # 1 - Send message, 2 - Display message
+    screenMode = 1 # 1 - Send message, 2 - Display message, 3 - Quit
     while True:
         if screenMode == 1: # Send message mode
             screenMode = sendMessage(screen, font, clock, color)
@@ -83,7 +83,8 @@ def sendMessage(screen, font, clock, color):
         clock.tick(30)
 
 def displayMessage(screen, font, clock, color):
-    client_socket.send("\n".encode('utf-8'))
+    # client_socket.send("\n".encode('utf-8'))
+    
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -91,7 +92,7 @@ def displayMessage(screen, font, clock, color):
             elif event.type == pg.KEYDOWN:
                 if event.key == pg.K_RETURN:
                     return 1
-
+        # print("Reached here")
         try:
             # Now we want to loop over received messages (there might be more than one) and print them
             # while True:
@@ -100,13 +101,15 @@ def displayMessage(screen, font, clock, color):
             username_header = client_socket.recv(HEADER_LENGTH)
 
             # If we received no data, server gracefully closed a connection, for example using socket.close() or socket.shutdown(socket.SHUT_RDWR)
-            if not len(username_header):
-                print('Connection closed by the server')
-                sys.exit()
+            # if not len(username_header):
+            #     print('Connection closed by the server')
+            #     continue
 
-            # Convert header to int value
-            username_length = int(username_header.decode('utf-8').strip())
-
+            try:
+                # Convert header to int value
+                username_length = int(username_header.decode('utf-8').strip())
+            except:
+                continue
             # Receive and decode username
             username = client_socket.recv(username_length).decode('utf-8')
 
@@ -118,24 +121,28 @@ def displayMessage(screen, font, clock, color):
             # Print message
             print(f'{username} > {responseText}')
             # return 1
-        except IOError as e:
-            # This is normal on non blocking connections - when there are no incoming data error is going to be raised
-            # Some operating systems will indicate that using AGAIN, and some using WOULDBLOCK error code
-            # We are going to check for both - if one of them - that's expected, means no incoming data, continue as normal
-            # If we got different error code - something happened
-            if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
-                print('Reading error: {}'.format(str(e)))
-                sys.exit()
+        except BlockingIOError as e:
+            continue
+        # except IOError as e:
+        #     # This is normal on non blocking connections - when there are no incoming data error is going to be raised
+        #     # Some operating systems will indicate that using AGAIN, and some using WOULDBLOCK error code
+        #     # We are going to check for both - if one of them - that's expected, means no incoming data, continue as normal
+        #     # If we got different error code - something happened
+        #     if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
+        #         print('Reading error: {}'.format(str(e)))
+        #         sys.exit()
 
-            # We just did not receive anything
-            return 3
-        except Exception as e:
-            # Any other exception - something happened, exit
-            print('Reading error: '.format(str(e)))
-            sys.exit()
+        #     # We just did not receive anything
+        #     print("What the fuck")
+        #     return 3
+        # except Exception as e:
+        #     # Any other exception - something happened, exit
+        #     print('Reading error: '.format(str(e)))
+        #     sys.exit()
         
         screen.fill(BLACK)
-        txt_surface = font.render(responseText, True, color)
+        thing_to_print = username + " > " + responseText
+        txt_surface = font.render(thing_to_print, True, color)
         screen.blit(txt_surface, (50, 100))
 
         pg.display.flip()
