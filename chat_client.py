@@ -141,9 +141,13 @@ def displayMessage(screen, font, clock, color):
         #     sys.exit()
         
         screen.fill(BLACK)
-        thing_to_print = username + " > " + responseText
+        thing_to_print = MY_USERNAME + " > "
         txt_surface = font.render(thing_to_print, True, color)
-        screen.blit(txt_surface, (50, 100))
+        screen.blit(txt_surface, (50, 200))
+
+        thing_to_print = responseText + " < " + username
+        txt_surface = font.render(thing_to_print, True, color)
+        screen.blit(txt_surface, (350, 200))
 
         pg.display.flip()
         clock.tick(30)
