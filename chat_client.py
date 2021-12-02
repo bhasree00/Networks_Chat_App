@@ -4,6 +4,8 @@ import socket
 import select
 import errno
 import pygame as pg
+from googletrans import Translator
+translator = Translator()
 
 WHITE = (255,255,255)
 BLACK = (0,0,0)
@@ -13,7 +15,220 @@ HEADER_LENGTH = 10
 IP = "127.0.0.1" # input("IP: ") # Needs to be "127.0.0.1"
 PORT = 1234 # input("Port: ") # Needs to be 1234
 MY_USERNAME = input("Username: ")
-# LANGUAGE = input("Language: ")
+MY_LANGUAGE = input("Language: ")
+
+
+languages = [
+    "aa",
+"ab",
+"af",
+"ak",
+"sq",
+"am",
+"ar",
+"an",
+"hy",
+"as",
+"av",
+"ae",
+"ay",
+"az",
+"ba",
+"bm",
+"eu",
+"be",
+"bn",
+"bh",
+"bi",
+"bo",
+"bs",
+"br",
+"bg",
+"my",
+"ca",
+"cs",
+"ch",
+"ce",
+"zh",
+"cu",
+"cv",
+"kw",
+"co",
+"cr",
+"cy",
+"cs",
+"da",
+"de",
+"dv",
+"nl",
+"dz",
+"el",
+"en",
+"eo",
+"et",
+"eu",
+"ee",
+"fo",
+"fa",
+"fj",
+"fi",
+"fr",
+"fy",
+"ff",
+"Ga",
+"de",
+"gd",
+"ga",
+"gl",
+"gv",
+"el",
+"gn",
+"gu",
+"ht",
+"ha",
+"he",
+"hz",
+"hi",
+"ho",
+"hr",
+"hu",
+"hy",
+"ig",
+"is",
+"io",
+"ii",
+"iu",
+"ie",
+"ia",
+"id",
+"ik",
+"is",
+"it",
+"jv",
+"ja",
+"kl",
+"kn",
+"ks",
+"ka",
+"kr",
+"kk",
+"km",
+"ki",
+"rw",
+"ky",
+"kv",
+"kg",
+"ko",
+"kj",
+"ku",
+"lo",
+"la",
+"lv",
+"li",
+"ln",
+"lt",
+"lb",
+"lu",
+"lg",
+"mk",
+"mh",
+"ml",
+"mi",
+"mr",
+"ms",
+"Mi",
+"mk",
+"mg",
+"mt",
+"mn",
+"mi",
+"ms",
+"my",
+"na",
+"nv",
+"nr",
+"nd",
+"ng",
+"ne",
+"nl",
+"nn",
+"nb",
+"no",
+"oc",
+"oj",
+"or",
+"om",
+"os",
+"pa",
+"fa",
+"pi",
+"pl",
+"pt",
+"ps",
+"qu",
+"rm",
+"ro",
+"ro",
+"rn",
+"ru",
+"sg",
+"sa",
+"si",
+"sk",
+"sk",
+"sl",
+"se",
+"sm",
+"sn",
+"sd",
+"so",
+"st",
+"es",
+"sq",
+"sc",
+"sr",
+"ss",
+"su",
+"sw",
+"sv",
+"ty",
+"ta",
+"tt",
+"te",
+"tg",
+"tl",
+"th",
+"bo",
+"ti",
+"to",
+"tn",
+"ts",
+"tk",
+"tr",
+"tw",
+"ug",
+"uk",
+"ur",
+"uz",
+"ve",
+"vi",
+"vo",
+"cy",
+"wa",
+"wo",
+"xh",
+"yi",
+"yo",
+"za",
+"zh",
+"zu"
+]
+while MY_LANGUAGE.lower() not in languages:
+    print("Wrong Input, Please input the your language in two letters please")
+    MY_LANGUAGE = input("Language: ")
+    
+    
+MY_LANGUAGE = ' [' + MY_LANGUAGE + ']'
 
 # Create a socket
 # socket.AF_INET - address family, IPv4, some otehr possible are AF_INET6, AF_BLUETOOTH, AF_UNIX
@@ -28,6 +243,7 @@ client_socket.setblocking(False)
 
 # Prepare username and header and send them
 # We need to encode username to bytes, then count number of bytes and prepare header of fixed size, that we encode to bytes as well
+MY_USERNAME = MY_USERNAME + MY_LANGUAGE
 username = MY_USERNAME.encode('utf-8')
 username_header = f"{len(username):<{HEADER_LENGTH}}".encode('utf-8')
 client_socket.send(username_header + username)
@@ -112,14 +328,23 @@ def displayMessage(screen, font, clock, color):
                 continue
             # Receive and decode username
             username = client_socket.recv(username_length).decode('utf-8')
-
+           
             # Now do the same for message (as we received username, we received whole message, there's no need to check if it has any length)
             message_header = client_socket.recv(HEADER_LENGTH)
             message_length = int(message_header.decode('utf-8').strip())
             responseText = client_socket.recv(message_length).decode('utf-8')
+            
+            first_val = MY_LANGUAGE.index('[')
+            second_val = MY_LANGUAGE.index(']')
 
+            language_val = MY_LANGUAGE[first_val + 1:second_val]
+
+            translations = translator.translate([responseText], dest = language_val)
+            for translation in translations:
+                new_val = translation.text
             # Print message
-            print(f'{username} > {responseText}')
+            print(f'{username} > {new_val}')
+            #print(f'{username} > {new_response_text}')
             # return 1
         except BlockingIOError as e:
             continue
@@ -145,7 +370,7 @@ def displayMessage(screen, font, clock, color):
         txt_surface = font.render(thing_to_print, True, color)
         screen.blit(txt_surface, (50, 200))
 
-        thing_to_print = responseText + " < " + username
+        thing_to_print = new_val + " < " + username
         txt_surface = font.render(thing_to_print, True, color)
         screen.blit(txt_surface, (350, 200))
 
@@ -158,5 +383,4 @@ if __name__ == '__main__':
     pg.init()
     main()
     pg.quit()
-
 
